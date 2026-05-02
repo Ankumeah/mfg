@@ -68,7 +68,7 @@ func main() {
     for _, ch := range chs {
       chInt, err := strconv.Atoi(ch)
       if err != nil {
-        fmt.Printf("Got non numeric chapter %v: %v\n", ch, err.Error())
+        fmt.Printf("\nGot non numeric chapter %v: %v\n", ch, err.Error())
         continue
       }
 
@@ -80,7 +80,7 @@ func main() {
         if err := downloadFile(
           url, path.Join(manga, savePath),
         ); err != nil {
-          fmt.Printf("Error while downloading chapter %v\n", ch)
+          fmt.Printf("\nError while downloading chapter %v: %v\n", ch, err.Error())
         }
         <- sem
         prog++
@@ -117,7 +117,7 @@ func getChapters(manga string) ([]string, error) {
 func downloadFile(url string, savePath string) error {
   if _, err := os.Stat(savePath); !errors.Is(err, os.ErrNotExist) {
     return nil
-  } else if err != nil {
+  } else if !errors.Is(err, os.ErrNotExist) && err != nil {
     return err
   }
 
@@ -129,7 +129,7 @@ func downloadFile(url string, savePath string) error {
   }
 
   dir := path.Dir(savePath)
-  tmp, err := os.CreateTemp(".", path.Join(dir, ".part_*"))
+  tmp, err := os.CreateTemp(dir, path.Join(".part_*"))
   if err != nil { return err }
   defer tmp.Close()
 
