@@ -1,10 +1,17 @@
 # mfg
 Simple program in golang to download all your favorite mangas on [mangafreak](https://ww2.mangafreak.me)
 
-## How to build
-```sh
-go build -ldflags="-s -w" -o ./bin/mfg .
-```
+## How to download
+  ### For regular users
+  - Go to [releases](https://github.com/Ankumeah/mfg/releases)
+  - Download the version that matches your system (you might have to google some stuff to find out which version)
+
+  ### For chads
+  ```sh
+  git clone https://github.com/Ankumeah/mfg
+  cd mfg
+  go build -ldflags="-s -w" -o ./bin/mfg .
+  ```
 
 ## How to use
 - Go to [mangafreak](https://ww2.mangafreak.me/Manga/Chainsaw_Man)
