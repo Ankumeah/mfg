@@ -46,6 +46,12 @@ func main() {
       continue
     }
 
+    maxPad := 1
+    for i, ch := range chs {
+	    if ch == "" { chs = append(chs[:i], chs[i + 1:]...) }
+      if len(ch) > maxPad { maxPad = len(ch) }
+    }
+
     fmt.Printf("Found %v chapters\n", len(chs))
 
     var prog uint
@@ -55,11 +61,6 @@ func main() {
         time.Sleep(time.Second * 1)
       }
     }()
-
-    maxPad := 1
-    for _, ch := range chs {
-      if len(ch) > maxPad { maxPad = len(ch) }
-    }
 
     os.MkdirAll(manga, 0o755)
 
