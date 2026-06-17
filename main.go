@@ -27,11 +27,8 @@ var regex2 *regexp.Regexp
 
 func init() {
 	if len(os.Args) < 1 {
-		fmt.Fprintln(os.Stderr, "argv is of len 0. You runnning on this on a potato arent you?")
+		fmt.Fprintln(os.Stderr, "argv is of len 0. Your runnning this on a potato arent you?")
 	}
-
-	regex1 = regexp.MustCompile(`/Read1_[^"]*`)
-	regex2 = regexp.MustCompile(`(?m)[0-9]*$`)
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %v [OPTIONS]... [MANGAS]...\n", os.Args[0])
@@ -42,8 +39,8 @@ func init() {
 
 	flag.UintVar(&maxDownloads, "j", 10, "Max parallel downloads")
 	t := flag.String("t", "10s", "Max download timeout. Eg - 1h1m1s1ms1us1ns")
-	mangas = flag.Args()
 	flag.Parse()
+	mangas = flag.Args()
 
 	if len(mangas) < 1 {
 		flag.Usage()
@@ -57,6 +54,9 @@ func init() {
 		fmt.Fprintf(os.Stderr, "Invalid timeout: %v\n", err.Error())
 		os.Exit(1)
 	}
+
+	regex1 = regexp.MustCompile(`/Read1_[^"]*`)
+	regex2 = regexp.MustCompile(`(?m)[0-9]*$`)
 }
 
 var client = &http.Client{Timeout: timeout}
