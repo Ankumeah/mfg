@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,36 +15,59 @@ import (
 	"time"
 )
 
-const binName = "mfg"
-const maxDownloads = 10
-const timeout = time.Second * 100
 const baseUrl = "https://images.mangafreak.net/downloads/"
 const baseMangaUrl = "https://ww2.mangafreak.me/Manga/"
+
+var maxDownloads uint
+var timeout time.Duration
+var mangas []string
 
 var regex1 *regexp.Regexp
 var regex2 *regexp.Regexp
 
 func init() {
+	if len(os.Args) < 1 {
+		fmt.Fprintln(os.Stderr, "argv is of len 0. You runnning on this on a potato arent you?")
+	}
+
 	regex1 = regexp.MustCompile(`/Read1_[^"]*`)
 	regex2 = regexp.MustCompile(`(?m)[0-9]*$`)
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %v [OPTIONS]... [MANGAS]...\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "  --help -h")
+		fmt.Fprintln(os.Stderr, "\tPrint this text")
+	}
+
+	flag.UintVar(&maxDownloads, "j", 10, "Max parallel downloads")
+	t := flag.String("t", "10s", "Max download timeout. Eg - 1h1m1s1ms1us1ns")
+	mangas = flag.Args()
+	flag.Parse()
+
+	if len(mangas) < 1 {
+		flag.Usage()
+		fmt.Fprintln(os.Stderr, "Must provide atlest one manga")
+		os.Exit(1)
+	}
+
+	var err error
+	timeout, err = time.ParseDuration(*t)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid timeout: %v\n", err.Error())
+		os.Exit(1)
+	}
 }
 
 var client = &http.Client{Timeout: timeout}
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("Usage: %v <manga>", binName)
-		os.Exit(1)
-	}
-
-	mangas := os.Args[1:len(os.Args)]
-
 	for _, manga := range mangas {
 		fmt.Printf("Downloading %v\n", manga)
 
 		chs, err := getChapters(manga)
 		if err != nil {
-			fmt.Printf("Error while getting %v: %v\n", manga, err.Error())
+			fmt.Fprintf(os.Stderr, "Error while getting %v: %v\n", manga, err.Error())
 			continue
 		}
 
@@ -62,7 +86,7 @@ func main() {
 		var prog uint
 		go func() {
 			for {
-				fmt.Printf("\r%v / %v", len(chs), prog)
+				fmt.Fprintf(os.Stderr, "\r%v / %v", len(chs), prog)
 				time.Sleep(time.Second * 1)
 			}
 		}()
@@ -74,7 +98,7 @@ func main() {
 		for _, ch := range chs {
 			chInt, err := strconv.Atoi(ch)
 			if err != nil {
-				fmt.Printf("\nGot non numeric chapter %v: %v\n", ch, err.Error())
+				fmt.Fprintf(os.Stderr, "\nGot non numeric chapter %v: %v\n", ch, err.Error())
 				continue
 			}
 
@@ -86,15 +110,15 @@ func main() {
 				if err := downloadFile(
 					url, path.Join(manga, savePath),
 				); err != nil {
-					fmt.Printf("\nError while downloading chapter %v: %v\n", ch, err.Error())
+					fmt.Fprintf(os.Stderr, "\nError while downloading chapter %v: %v\n", ch, err.Error())
 				}
 				<-sem
 				prog++
 			})
 		}
 		wg.Wait()
-		fmt.Printf("\r%v / %v", len(chs), prog)
-		fmt.Println()
+		fmt.Fprintf(os.Stderr, "\r%v / %v", len(chs), prog)
+		fmt.Fprintln(os.Stderr)
 	}
 }
 
@@ -142,8 +166,7 @@ func downloadFile(url string, savePath string) error {
 		return errors.New("Http error: " + res.Status)
 	}
 
-	dir := path.Dir(savePath)
-	tmp, err := os.CreateTemp(dir, path.Join(".part_*"))
+	tmp, err := os.CreateTemp("", "mfg_*")
 	if err != nil {
 		return err
 	}
