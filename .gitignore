@@ -1,2 +1,8 @@
-bin/
-Chainsaw_Man/
+*
+!*/**
+
+!main.go
+!README.md
+!helper.sh
+!.justfile
+!.gitignore

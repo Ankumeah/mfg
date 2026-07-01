@@ -23,7 +23,7 @@ list_ignore() {
   cat "${ignore}"
 }
 sync() {
-  "${bin}" "$(cat ${save_file} | xargs)"
+  cat "${save_file}" | xargs "${bin}"
 }
 clean() {
   for file in $(ls); do
