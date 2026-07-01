@@ -84,9 +84,12 @@ func main() {
 
 		fmt.Printf("Found %v chapters\n", len(chs))
 
-		var prog uint
+		var prog int
 		go func() {
 			for {
+        if prog == len(chs) {
+          return
+        }
 				fmt.Fprintf(os.Stderr, "\r%v / %v", len(chs), prog)
 				time.Sleep(time.Second * 1)
 			}
