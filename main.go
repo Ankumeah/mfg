@@ -1,6 +1,7 @@
 package main
 
 import (
+  "bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -166,21 +167,16 @@ func downloadFile(url string, savePath string) error {
 		return errors.New("Http error: " + res.Status)
 	}
 
-	tmp, err := os.CreateTemp("", "mfg_*")
-	if err != nil {
-		return err
-	}
-	defer tmp.Close()
-
-	_, err = io.Copy(tmp, res.Body)
+  var buf bytes.Buffer
+	_, err = io.Copy(&buf, res.Body)
 	if err != nil {
 		return err
 	}
 
-	err = os.Rename(tmp.Name(), savePath)
-	if err != nil {
-		return err
-	}
+  err = os.WriteFile(savePath, buf.Bytes(), 0o755)
+  if err != nil {
+    return err
+  }
 
 	return nil
 }
